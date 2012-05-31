@@ -1,0 +1,11 @@
+= PathTree
+
+This gem provides support for creating tree data structures. The structure of the tree is defined with dot delimited paths on each node. This has a couple of advantages over the +acts_as_tree+ plugin.
+
+1. Each node gets a unique character identifier that has semantic qualities and indicates the structure in the tree.
+
+2. Queries for all ancestors or all descendants are far more efficient. 
+
+3. Out of the box the code works with ActiveRecord, but it can easily be made to work with other ORM's if they implement just a few methods.
+
+See PathTree for more details.
