@@ -4,18 +4,19 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = "tribune-path_tree"
+  s.name = "path_tree"
   s.version = "1.0.8"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Brian Durand"]
-  s.date = "2012-05-31"
+  s.date = "2012-06-05"
   s.description = "Module that defines a tree data structure based on a path."
   s.email = ["bdurand@tribune.com"]
   s.extra_rdoc_files = [
     "README.rdoc"
   ]
   s.files = [
+    "License.txt",
     "README.rdoc",
     "Rakefile",
     "lib/path_tree.rb",
