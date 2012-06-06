@@ -32,5 +32,6 @@ begin
     gem.add_development_dependency('sqlite3')
     gem.add_development_dependency('activerecord')
   end
+  Jeweler::RubygemsDotOrgTasks.new
 rescue LoadError
 end
