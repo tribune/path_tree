@@ -22,7 +22,7 @@ begin
     gem.summary = %Q{Helper module for constructing tree data structures}
     gem.description = %Q{Module that defines a tree data structure based on a path.}
     gem.authors = ["Brian Durand"]
-    gem.email = ["bdurand@tribune.com"]
+    gem.email = ["mdobrota@tribune.com", "bdurand@tribune.com"]
     gem.files = FileList["lib/**/*", "spec/**/*", "README.rdoc", "Rakefile", "License.txt"].to_a
     gem.has_rdoc = true
     gem.rdoc_options << '--line-numbers' << '--inline-source' << '--main' << 'README.rdoc'
