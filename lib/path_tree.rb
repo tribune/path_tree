@@ -42,7 +42,7 @@ module PathTree
     
     # Get all the root nodes (i.e. those without any parents)
     def roots
-      all(:conditions => {:parent_path => nil})
+      where(parent_path: nil).to_a
     end
     
     # Set the path delimiter (default is '.').
@@ -58,7 +58,7 @@ module PathTree
     # tree, this is the fastest way to load it. Returns the root node of the branch.
     def branch (path)
       raise ArgumentError.new("branch path must not be blank") if path.blank?
-      root = first(:conditions => {:path => path})
+      root = where(path: path).first
       return [] unless root
       nodes = path_like(path).sort{|a,b| b.path <=> a.path}
       nodes << root
@@ -73,7 +73,8 @@ module PathTree
       end
     end
     
-    # Replace accented characters with the closest ascii equivalent
+    # Replace accented characters with the closest ascii equivalent.
+    # NOTE: characters than can't be decomposed to a latin equivalent may not be replaced.
     def asciify (value)
       if value
         value.gsub(UPPER_A_PATTERN, 'A').gsub(LOWER_A_PATTERN, 'a').
@@ -96,7 +97,7 @@ module PathTree
     
     # Abstract way of finding paths that start with a value so it can be overridden by non-SQL implementations.
     def path_like (value)
-      all(:conditions => ["path LIKE ?", "#{value}#{path_delimiter}%"])
+      where("path LIKE ?", "#{value}#{path_delimiter}%").to_a
     end
     
     # Expand a path into an array of the path and all its ancestor paths.
@@ -153,7 +154,7 @@ module PathTree
   def parent
     unless instance_variable_defined?(:@parent)
       if path.index(path_delimiter)
-        @parent = self.class.base_class.first(:conditions => {:path => parent_path})
+        @parent = self.class.base_class.where(path: parent_path).first
       else
         @parent = nil
       end
@@ -196,7 +197,7 @@ module PathTree
   def children
     unless @children
       childrens_path = new_record? ? path : path_was
-      @children = self.class.base_class.all(:conditions => {:parent_path => childrens_path})
+      @children = self.class.base_class.where(parent_path: childrens_path).to_a
       @children.each{|c| c.parent = self}
     end
     @children
@@ -204,7 +205,8 @@ module PathTree
 
   # Get all nodes that share the same parent as this node.
   def siblings
-    self.class.base_class.all(:conditions => {:parent_path => parent_path}).reject{|node| node == self}
+    # OPTIMIZE if this record has an ID, it may be more efficient to exclude it via query rather than using reject
+    self.class.base_class.where(parent_path: parent_path).to_a.reject{|node| node == self }
   end
 
   # Get all descendant of this node.
@@ -219,7 +221,7 @@ module PathTree
     if ancestor_paths.empty?
       []
     else
-      self.class.base_class.all(:conditions => {:path => ancestor_paths}).sort{|a,b| a.path.length <=> b.path.length}
+      self.class.base_class.where(path: ancestor_paths).to_a.sort{|a,b| a.path.length <=> b.path.length}
     end
   end
 

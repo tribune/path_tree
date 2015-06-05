@@ -165,7 +165,7 @@ describe PathTree do
   end
 
   
-  context "with default delimiter" do
+  context "with custom delimiter" do
     before :all do
       PathTree::Test.path_delimiter = '/'
       @root_1 = PathTree::Test.create!(:name => "Root 1")
@@ -259,18 +259,18 @@ describe PathTree do
 
     it "should update child paths when a node is destroyed" do
       begin
-      PathTree::Test.transaction do
-        node = PathTree::Test.find_by_path("root-1/parent-a")
-        node.name = "New Name"
-        node.destroy
-        root = PathTree::Test.find_by_path("root-1")
-        root.children.collect{|c| c.path}.should == ["root-1/parent-b", "root-1/parent-c", "root-1/child-a1", "root-1/child-a2"]
-        root.children[2].children.collect{|c| c.path}.should == ["root-1/child-a1/grandchild-a1-1"]
-        raise ActiveRecord::Rollback
+        PathTree::Test.transaction do
+          node = PathTree::Test.find_by_path("root-1/parent-a")
+          node.name = "New Name"
+          node.destroy
+          root = PathTree::Test.find_by_path("root-1")
+          root.children.collect{|c| c.path}.should == ["root-1/parent-b", "root-1/parent-c", "root-1/child-a1", "root-1/child-a2"]
+          root.children[2].children.collect{|c| c.path}.should == ["root-1/child-a1/grandchild-a1-1"]
+          raise ActiveRecord::Rollback
+        end
+      rescue
+        puts $@.join("\n")
       end
-    rescue
-      puts $@.join("\n")
-    end
     end
   end
 end
