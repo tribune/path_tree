@@ -1,3 +1,5 @@
+require File.expand_path("../path_tree/patterns.rb", __FILE__)
+
 # This module implements a tree structure by using a convention of converting a name into a path.
 # Paths created by normalizing a name attribute and then separating levels with periods with
 # the lowest level coming last.
@@ -6,11 +8,6 @@
 # have support for after_destroy and after_save callbacks, validates_* macros and include attributes
 # for name, node_path, path, and parent_path.
 module PathTree  
-  if RUBY_VERSION.match(/^1\.8/)
-    require File.expand_path("../ruby_18_patterns.rb", __FILE__)
-  else
-    require File.expand_path("../ruby_19_patterns.rb", __FILE__)
-  end
   include Patterns
 
   def self.included (base)

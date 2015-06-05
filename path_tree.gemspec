@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'path_tree/version'
 Gem::Specification.new do |spec|
   spec.name          = 'path_tree'
-  spec.version       = PathTree::VERSION
+  spec.version       = PathTree::VERSION.dup  # dup for ruby 1.9
   spec.authors       = ['Brian Durand', 'Milan Dobrota']
   spec.email         = ['mdobrota@tribpub.com']
   spec.summary       = 'Helper module for constructing tree data structures'
