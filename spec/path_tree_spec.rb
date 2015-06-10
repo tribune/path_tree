@@ -32,6 +32,17 @@ describe PathTree do
   after :all do
     PathTree::Test.drop_tables
   end
+
+  context "validations" do
+    it "is invalid without a name"
+    it "is invalid without a node_path"
+    it "is invalid without a path"
+
+    it "enforces unique path"
+
+    it "enforces unique node_path under a parent"
+    it "allows duplicate node_path under different parents"
+  end
   
   context "path construction" do
     it "should turn accented characters into ascii equivalents" do
@@ -76,6 +87,10 @@ describe PathTree do
     after :all do
       PathTree::Test.delete_all
     end
+
+    it "updates the node_path when name is changed"
+
+    it "updates the path when node_path is changed"
 
     it "should get the root nodes" do
       PathTree::Test.roots.sort{|a,b| a.path <=> b.path}.should == [@root_1, @root_2]
@@ -129,7 +144,7 @@ describe PathTree do
       node.ancestors.should == [@root_1, @parent_a]
     end
 
-    it "should maintain the path with the name path" do
+    it "should maintain the path with the node path" do
       node = PathTree::Test.find_by_path("root-1.parent-a")
       node.node_path = "New Name"
       node.path.should == "root-1.new-name"
@@ -165,6 +180,7 @@ describe PathTree do
   end
 
   
+  # TODO can we use shared examples to avoid duplication?
   context "with custom delimiter" do
     before :all do
       PathTree::Test.path_delimiter = '/'
@@ -182,6 +198,10 @@ describe PathTree do
     after :all do
       PathTree::Test.path_delimiter = nil
     end
+
+    it "updates the node_path when name is changed"
+
+    it "updates the path when node_path is changed"
 
     it "should get the root nodes" do
       PathTree::Test.roots.sort{|a,b| a.path <=> b.path}.should == [@root_1, @root_2]
@@ -235,7 +255,7 @@ describe PathTree do
       node.ancestors.should == [@root_1, @parent_a]
     end
 
-    it "should maintain the path with the name path" do
+    it "should maintain the path with the node path" do
       node = PathTree::Test.find_by_path("root-1/parent-a")
       node.node_path = "New Name"
       node.path.should == "root-1/new-name"
