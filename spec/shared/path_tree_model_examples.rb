@@ -39,9 +39,7 @@ shared_examples "a PathTree model" do |path_delimiter, fq_separator|
     PathTree::Test.path_delimiter = nil  # reset to default
   end
 
-  it "reassigns the node_path when name is changed"
-
-  it "reassigns the path when node_path is changed"
+  let(:unsaved_rec) { PathTree::Test.new(name: 'level-2', parent: @root_1) }
 
   it "should get the root nodes" do
     PathTree::Test.roots.should =~ [@root_1, @root_2]
@@ -96,10 +94,35 @@ shared_examples "a PathTree model" do |path_delimiter, fq_separator|
     node.ancestors.should == [@root_1, @parent_a]
   end
 
+  context "when name is changed" do
+    it "fills in a blank node_path when name is changed" do
+      unsaved_rec.node_path = ''
+
+      unsaved_rec.name = 'Changed Parent'
+      expect(unsaved_rec.node_path).to eq 'changed-parent'
+      expect(unsaved_rec.path).to eq delim_join('root-1', 'changed-parent')
+    end
+
+    it "does not overwrite a present node_path when name is changed" do
+      orig_node_path = unsaved_rec.node_path
+      unsaved_rec.name = 'Changed Parent'
+      expect(unsaved_rec.node_path).to eq orig_node_path
+      expect(unsaved_rec.path).to eq delim_join('root-1', orig_node_path)
+    end
+  end
+
   it "should maintain the path with the node path" do
     node = PathTree::Test.find_by_path(delim_join("root-1", "parent-a"))
     node.node_path = "New Name"
     node.path.should == delim_join("root-1", "new-name")
+  end
+
+  it "should expand a path to its component paths" do
+    PathTree::Test.expanded_paths(delim_join(*%w[this is a test])).should == [
+      "this",
+      delim_join(*%w[this is]),
+      delim_join(*%w[this is a]),
+      delim_join(*%w[this is a test]) ]
   end
 
   it "should get the expanded paths for a node" do

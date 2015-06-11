@@ -58,11 +58,6 @@ describe PathTree do
       PathTree::Test.pathify("This is the 1st / test À...").should == "this-is-the-1st-test-a"
     end
 
-    # TODO move this inside delimiter contexts
-    it "should expand a path to its component paths" do
-      PathTree::Test.expanded_paths("this.is.a.test").should == ["this", "this.is", "this.is.a", "this.is.a.test"]
-    end
-    
     it "should set the parent path when setting the parent" do
       parent = PathTree::Test.new(:name => "parent")
       node = PathTree::Test.new(:name => "child")
@@ -74,10 +69,10 @@ describe PathTree do
   end
 
   context "with default delimiter" do
-    it_behaves_like "a PathTree model", nil, '/'
+    include_examples "a PathTree model", nil, '/'
   end
 
   context "with custom delimiter" do
-    it_behaves_like "a PathTree model", '/', ':'
+    include_examples "a PathTree model", '/', ':'
   end
 end
