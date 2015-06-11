@@ -4,28 +4,6 @@ require 'spec_helper'
 require 'shared/path_tree_model_examples'
 
 describe PathTree do
-  
-  module PathTree
-    class Test < ActiveRecord::Base
-      self.table_name = :test_path_trees
-      
-      def self.create_tables
-        connection.create_table(table_name) do |t|
-          t.string :name
-          t.string :node_path
-          t.string :path
-          t.string :parent_path
-        end unless table_exists?
-      end
-
-      def self.drop_tables
-        connection.drop_table(table_name)
-      end
-      
-      include PathTree
-    end
-  end
-
   before :all do
     PathTree::Test.create_tables
   end
@@ -39,21 +17,21 @@ describe PathTree do
 
     it "is invalid without a name" do
       expect(new_rec).not_to be_valid
-      expect(new_rec.errors[:name].first).to match /can't be blank/
+      expect(new_rec.errors[:name]).to include "can't be blank"
     end
 
     it "is invalid without a node_path" do
       new_rec.name = "I'm a leaf"
       new_rec.node_path = ''
       expect(new_rec).not_to be_valid
-      expect(new_rec.errors[:node_path].first).to match /can't be blank/
+      expect(new_rec.errors[:node_path]).to include "can't be blank"
     end
 
     it "is invalid without a path" do
       new_rec.name = "I'm a leaf"
       new_rec.path = ''
       expect(new_rec).not_to be_valid
-      expect(new_rec.errors[:path].first).to match /can't be blank/
+      expect(new_rec.errors[:path]).to include "can't be blank"
     end
 
     context "uniqueness" do
@@ -81,25 +59,27 @@ describe PathTree do
   end
   
   context "path construction" do
-    it "should turn accented characters into ascii equivalents" do
-      PathTree::Test.asciify("ÀÂÄÃÅàâáããä-ÈÊÉËèêéë-ÌÎÍÏìîíï-ÒÔÖØÓÕòôöøóõ-ÚÜÙÛúüùû-ÝýÿÑñÇçÆæßÐ").should == "AAAAAaaaaaa-EEEEeeee-IIIIiiii-OOOOOOoooooo-UUUUuuuu-YyyNnCcAEaessD"
+    it "turns accented characters into ascii equivalents" do
+      accent_string = "ÀÂÄÃÅàâáããä-ÈÊÉËèêéë-ÌÎÍÏìîíï-ÒÔÖØÓÕòôöøóõ-ÚÜÙÛúüùû-ÝýÿÑñÇçÆæßÐ"
+      expected_string = "AAAAAaaaaaa-EEEEeeee-IIIIiiii-OOOOOOoooooo-UUUUuuuu-YyyNnCcAEaessD"
+      expect(PathTree::Test.asciify(accent_string)).to eq expected_string
     end
 
-    it "should unquote strings" do
-      PathTree::Test.unquote(%Q("This is a 'test'")).should == "This is a test"
+    it "unquotes strings" do
+      expect(PathTree::Test.unquote(%Q("This is a 'test'"))).to eq "This is a test"
     end
 
-    it "should translate a value to a path part" do
-      PathTree::Test.pathify("This is the 1st / test À...").should == "this-is-the-1st-test-a"
+    it "translates a value to a path part" do
+      expect(PathTree::Test.pathify("This is the 1st / test À...")).to eq "this-is-the-1st-test-a"
     end
 
-    it "should set the parent path when setting the parent" do
+    it "sets the parent path when setting the parent" do
       parent = PathTree::Test.new(:name => "parent")
       node = PathTree::Test.new(:name => "child")
       node.parent = parent
-      node.parent_path.should == "parent"
+      expect(node.parent_path).to eq "parent"
       node.parent = nil
-      node.parent_path.should == nil
+      expect(node.parent_path).to be nil
     end
   end
 

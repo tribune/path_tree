@@ -41,57 +41,57 @@ shared_examples "a PathTree model" do |path_delimiter, fq_separator|
 
   let(:unsaved_rec) { PathTree::Test.new(name: 'level-2', parent: @root_1) }
 
-  it "should get the root nodes" do
-    PathTree::Test.roots.should =~ [@root_1, @root_2]
+  it "gets the root nodes" do
+    expect(PathTree::Test.roots).to match_array [@root_1, @root_2]
   end
 
-  it "should load an entire branch structure" do
+  it "loads an entire branch structure" do
     branch = PathTree::Test.branch(delim_join("root-1", "parent-a"))
-    branch.should == @parent_a
-    branch.instance_variable_get(:@children).should == [@child_a1, @child_a2]
-    branch.children.first.instance_variable_get(:@children).should == [@grandchild]
+    expect(branch).to eq @parent_a
+    expect(branch.instance_variable_get(:@children)).to eq [@child_a1, @child_a2]
+    expect(branch.children.first.instance_variable_get(:@children)).to eq [@grandchild]
   end
 
-  it "should construct a fully qualified name with a delimiter" do
-    @grandchild.full_name.should == "Root 1 > Parent A > Child A1 > Grandchild A1.1"
-    @grandchild.full_name(:separator => fq_sep).should ==
-      fq_join("Root 1", "Parent A", "Child A1", "Grandchild A1.1")
-    @grandchild.full_name(:context => delim_join("root-1", "parent-a")).should == "Child A1 > Grandchild A1.1"
+  it "constructs a fully qualified name with a delimiter" do
+    expect(@grandchild.full_name).to eq "Root 1 > Parent A > Child A1 > Grandchild A1.1"
+    expect(@grandchild.full_name(:separator => fq_sep)).to eq(
+      fq_join("Root 1", "Parent A", "Child A1", "Grandchild A1.1") )
+    expect(@grandchild.full_name(:context => delim_join("root-1", "parent-a"))).to eq "Child A1 > Grandchild A1.1"
   end
 
-  it "should be able to get and set a parent node" do
+  it "is able to get and set a parent node" do
     node = PathTree::Test.find_by_path(delim_join("root-1", "parent-a"))
-    node.parent.should == @root_1
+    expect(node.parent).to eq @root_1
     node.parent = @root_2
-    node.parent_path.should == "root-2"
-    node.path.should == delim_join("root-2", "parent-a")
+    expect(node.parent_path).to eq "root-2"
+    expect(node.path).to eq delim_join("root-2", "parent-a")
   end
 
-  it "should be able to set the parent by path" do
+  it "is able to set the parent by path" do
     node = PathTree::Test.find_by_path(delim_join("root-1", "parent-a"))
     node.parent_path = "root-2"
-    node.parent.should == @root_2
-    node.path.should == delim_join("root-2", "parent-a")
+    expect(node.parent).to eq @root_2
+    expect(node.path).to eq delim_join("root-2", "parent-a")
   end
 
-  it "should have child nodes" do
+  it "has child nodes" do
     node = PathTree::Test.find_by_path(delim_join("root-1", "parent-a"))
-    node.children.should == [@child_a1, @child_a2]
+    expect(node.children).to eq [@child_a1, @child_a2]
   end
 
-  it "should have descendant nodes" do
+  it "has descendant nodes" do
     node = PathTree::Test.find_by_path(delim_join("root-1", "parent-a"))
-    node.descendants.should == [@child_a1, @child_a2, @grandchild]
+    expect(node.descendants).to eq [@child_a1, @child_a2, @grandchild]
   end
 
-  it "should have sibling nodes" do
+  it "has sibling nodes" do
     node = PathTree::Test.find_by_path(delim_join("root-1", "parent-a"))
-    node.siblings.should == [@parent_b, @parent_c]
+    expect(node.siblings).to eq [@parent_b, @parent_c]
   end
 
-  it "should have ancestor nodes" do
+  it "has ancestor nodes" do
     node = PathTree::Test.find_by_path(delim_join("root-1", "parent-a", "child-a1"))
-    node.ancestors.should == [@root_1, @parent_a]
+    expect(node.ancestors).to eq [@root_1, @parent_a]
   end
 
   context "when name is changed" do
@@ -111,57 +111,60 @@ shared_examples "a PathTree model" do |path_delimiter, fq_separator|
     end
   end
 
-  it "should maintain the path with the node path" do
+  it "maintains the path with the node path" do
     node = PathTree::Test.find_by_path(delim_join("root-1", "parent-a"))
     node.node_path = "New Name"
-    node.path.should == delim_join("root-1", "new-name")
+    expect(node.path).to eq delim_join("root-1", "new-name")
   end
 
-  it "should expand a path to its component paths" do
-    PathTree::Test.expanded_paths(delim_join(*%w[this is a test])).should == [
+  it "expands a path to its component paths" do
+    expect(PathTree::Test.expanded_paths(delim_join(*%w[this is a test]))).to eq [
       "this",
       delim_join(*%w[this is]),
       delim_join(*%w[this is a]),
       delim_join(*%w[this is a test]) ]
   end
 
-  it "should get the expanded paths for a node" do
-    @grandchild.expanded_paths.should == [
+  it "gets the expanded paths for a node" do
+    expect(@grandchild.expanded_paths).to eq [
       "root-1",
       delim_join("root-1", "parent-a"),
       delim_join("root-1", "parent-a", "child-a1"),
       delim_join("root-1", "parent-a", "child-a1", "grandchild-a1-1") ]
   end
 
-  it "should update child paths when the path is changed" do
-    PathTree::Test.transaction do
+  context "child paths" do
+    around :each do |ex|
+      PathTree::Test.transaction do
+        ex.run
+        raise ActiveRecord::Rollback
+      end
+    end
+
+    it "updates child paths when the path is changed" do
       node = PathTree::Test.find_by_path(delim_join("root-1", "parent-a"))
       node.node_path = "New Name"
       node.save!
       node.reload
-      node.children.map(&:path).should == [
+      expect(node.children.map(&:path)).to eq [
         delim_join("root-1", "new-name", "child-a1"),
         delim_join("root-1", "new-name", "child-a2") ]
-      node.children.first.children.map(&:path).should == [
+      expect(node.children.first.children.map(&:path)).to eq [
         delim_join("root-1", "new-name", "child-a1", "grandchild-a1-1") ]
-      raise ActiveRecord::Rollback
     end
-  end
 
-  it "should update child paths when a node is destroyed" do
-    PathTree::Test.transaction do
+    it "updates child paths when a node is destroyed" do
       node = PathTree::Test.find_by_path(delim_join("root-1", "parent-a"))
       node.name = "New Name"
       node.destroy
       root = PathTree::Test.find_by_path("root-1")
-      root.children.map(&:path).should == [
+      expect(root.children.map(&:path)).to eq [
         delim_join("root-1", "parent-b"),
         delim_join("root-1", "parent-c"),
         delim_join("root-1", "child-a1"),
         delim_join("root-1", "child-a2") ]
-      root.children[2].children.map(&:path).should == [
+      expect(root.children[2].children.map(&:path)).to eq [
         delim_join("root-1", "child-a1", "grandchild-a1-1") ]
-      raise ActiveRecord::Rollback
     end
   end
 end
